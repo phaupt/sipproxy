@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<TransformationConfig>
+<Definitions/>
+<TransformationRules>
+<Pbx2Client>
+<Rule isActive="false" regex="(Allow:)( .*,)*(.*)" replacement="$1 INVITE, ACK"/>
+</Pbx2Client>
+<Client2Pbx>
+<Rule isActive="false" regex="(Max-Forwards:)( \d*)" replacement="$1 100"/>
+<Rule isActive="false" regex="^(User-Agent:)(.*)" replacement="$1 SIP Proxy Application"/>
+</Client2Pbx>
+</TransformationRules>
+</TransformationConfig>

@@ -1,0 +1,166 @@
+<TestCase cycles="3" initialRequestMessageID="1" name="Sample Test Case" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TestCaseSchema.xsd">
+	<Variables>
+		<!-- Following different variables can be defined -->
+		<Var name="ClearText">
+			<ClearText>clear text variable content</ClearText>
+		</Var>
+		<Var name="ConfigValueTargetIP">
+			<ConfigValue paramName="TargetIP"/>
+		</Var>		
+		<Var name="NumberCounter">
+			<NumberCounter startValue="10" counterIncrement="2"/>
+		</Var>
+		<Var name="NumberRangeFuzzer">
+			<NumberRangeFuzzer minimum="-10" maximum="100000"/>
+		</Var>
+		<Var name="StringMutationFuzzerRandom">
+			<StringMutationFuzzer length="15"/>
+		</Var>
+		<Var name="StringMutationFuzzerCharset">
+			<StringMutationFuzzer length="15">
+				<CharacterSet>a-z,0-9,X,Y,Z</CharacterSet>
+			</StringMutationFuzzer>
+		</Var>		
+		<Var name="StringExpansionFuzzerRandom">
+			<StringExpansionFuzzer increment="1"/>
+		</Var>
+		<Var name="StringExpansionFuzzerCharSet">
+			<StringExpansionFuzzer increment="2">
+				<CharacterSet>
+				<![CDATA[a-z,0-9,\,,\\,#]]>
+				</CharacterSet>
+			</StringExpansionFuzzer>
+		</Var>
+		<Var name="ValueListFuzzerFile">
+			<ValueListFuzzer repeatValueList="true" filePath="TestCases/sampleValueList.txt"/>
+		</Var>
+		<Var name="ValueListFuzzerList">
+			<ValueListFuzzer repeatValueList="false">
+				<![CDATA[ValueListFuzzerList 1
+ValueListFuzzerList 2
+ValueListFuzzerList 3
+ValueListFuzzerList 4]]>
+			</ValueListFuzzer>
+		</Var>		
+		<Var name="HexValueListFuzzerFile">
+			<HexValueListFuzzer repeatValueList="false" filePath="TestCases/sampleHexValueList.txt"/>
+		</Var>
+				
+		<Var name="HexValueListFuzzerList">
+			<HexValueListFuzzer repeatValueList="true">
+				<![CDATA[0x480x650x780x560x610x6C0x750x650x4C0x690x730x740x460x750x7A0x7A0x650x720x4C0x690x730x740x200x31
+0x480x650x780x560x610x6C0x750x650x4C0x690x730x740x460x750x7A0x7A0x650x720x4C0x690x730x740x200x32
+0x480x650x780x560x610x6C0x750x650x4C0x690x730x740x460x750x7A0x7A0x650x720x4C0x690x730x740x200x33
+0x480x650x780x560x610x6C0x750x650x4C0x690x730x740x460x750x7A0x7A0x650x720x4C0x690x730x740x200x34]]>
+			</HexValueListFuzzer>
+		</Var>
+	</Variables>
+	<Request requestID="1">
+		<MessageModifier>
+			<LinePermutator startLine="3" endLine="5"/>
+		</MessageModifier>		
+		<Variables>
+			<Var name="attackerNr">
+				<ClearText><![CDATA[1111]]></ClearText>
+			</Var>
+			<Var name="targetNr">
+				<ClearText><![CDATA[2222]]></ClearText>
+			</Var>
+			<Var name="attackerIP">
+				<ConfigValue paramName="TestCaseSocketIP"/>
+			</Var>
+			<Var name="attackerPort">
+				<ConfigValue paramName="TestCaseSocketPort"/>
+			</Var>
+			<Var name="targetIP">
+				<ConfigValue paramName="TargetIP"/>
+			</Var>
+			<Var name="call_ID_REGISTER">
+				<StringMutationFuzzer length="10"/>
+			</Var>
+			<Var name="call_ID_INVITE">
+				<StringMutationFuzzer length="10"/>
+			</Var>
+			<Var name="sdp_ID">
+				<NumberRangeFuzzer minimum="100000000" maximum="999999999"/>
+			</Var>			
+		</Variables>
+		<Timeout timeInMilliseconds="2000" message="no answer"/>		
+		<Content><![CDATA[REGISTER sip:/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'attackerIP'/:/'attackerPort'/
+Max-Forwards: 20
+To: <sip:/'attackerNr'/@/'targetIP'/>
+From: <sip:/'attackerNr'/@/'attackerIP'/>;tag=RegisterAndInviteAttempt
+Call-ID: /'call_ID_REGISTER'/@/'targetIP'/
+CSeq: 1 REGISTER
+Contact: <sip:/'attackerNr'/@/'attackerIP'/:/'attackerPort'/>
+Content-Length: 0
+]]></Content>
+		<Response category="warning">
+			<!-- REGISTER was accepted by the Proxy -->
+			<Regex><![CDATA[(SIP/2.0 200)((.*)(\r\n))+(Call-ID: /'call_ID_REGISTER'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay" followingRequestID="2" waitingTimeInMilliseconds="500">
+			<!-- Proxy Authentication Required -->
+			<Regex><![CDATA[(SIP/2.0 401)((.*)(\r\n))+(Call-ID: /'call_ID_REGISTER'/@/'targetIP'/)]]></Regex>
+			<ResponseVariables>
+				<ResponseVar name="ResponseCatcherNonce">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(nonce=")(.*?)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+				<ResponseVar name="ResponseCatcherRealm">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(realm=")(.*?)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+			</ResponseVariables>
+		</Response>
+	</Request>
+	<Request requestID="2">
+		<MessageModifier>
+			<LinePermutator startLine="3" endLine="10"/>			
+			<ContentLength/>
+		</MessageModifier>			
+		<Variables>
+			<Var name="secret">
+				<ClearText>123456</ClearText>
+			</Var>
+			<Var name="Digest">
+				<Digest realm="/'ResponseCatcherRealm'/" uri="sip:/'attackerIP'/" username="/'attackerNr'/" secret="/'secret'/" nonce="/'nonceRegister'/" method="REGISTER"/>
+			</Var>
+		</Variables>
+		<Timeout timeInMilliseconds="2000" message="test cycle end"/>
+				
+		<Content>
+<![CDATA[Content-Length: ?
+
+ClearText: /'ClearText'/
+ConfigValueTargetIP: /'ConfigValueTargetIP'/			
+NumberCounter: /'NumberCounter'/
+NumberRangeFuzzer: /'NumberRangeFuzzer'/			
+StringMutationFuzzerRandom: /'StringMutationFuzzerRandom'/
+StringMutationFuzzerCharset: /'StringMutationFuzzerCharset'/
+StringExpansionFuzzerRandom: /'StringExpansionFuzzerRandom'/
+StringExpansionFuzzerCharSet: /'StringExpansionFuzzerCharSet'/
+Content-Length: ?
+
+ValueListFuzzerFile: /'ValueListFuzzerFile'/
+ValueListFuzzerList: /'ValueListFuzzerList'/
+HexValueListFuzzerFile: /'HexValueListFuzzerFile'/
+HexValueListFuzzerList: /'HexValueListFuzzerList'/			
+ResponseCatcherNonce: /'ResponseCatcherNonce'/
+ResponseCatcherRealm: /'ResponseCatcherRealm'/
+Digest:/'Digest'/]]>
+		</Content>
+		<Response category="warning">
+			<!-- REGISTER Authentication was not accepted -->
+			<Regex><![CDATA[(SIP/2.0 4)((.*)(\r\n))+(Call-ID: /'call_ID_REGISTER'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay" followingRequestID="3" waitingTimeInMilliseconds="500">
+			<!-- REGISTER was accepted by the Proxy -->
+			<Regex><![CDATA[(SIP/2.0 200)((.*)(\r\n))+(Call-ID: /'call_ID_REGISTER'/@/'targetIP'/)]]></Regex>
+		</Response>
+	</Request>
+</TestCase>
+

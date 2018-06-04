@@ -1,0 +1,78 @@
+<TestCase initialRequestMessageID="1" name="Unauthorized INVITE fuzzing attack" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TestCaseSchema.xsd">
+
+	<Variables>
+		<Var name="attackerNr">
+			<ClearText><![CDATA[1111]]></ClearText>
+		</Var>
+		<Var name="targetNr">
+			<ClearText><![CDATA[2222]]></ClearText>
+		</Var>
+		<Var name="attackerIP">
+			<ConfigValue paramName="TestCaseSocketIP"/>
+		</Var>
+		<Var name="attackerPort">
+			<ConfigValue paramName="TestCaseSocketPort"/>
+		</Var>
+		<Var name="targetIP">
+			<ConfigValue paramName="TargetIP"/>
+		</Var>
+		<Var name="call_ID">
+			<StringMutationFuzzer length="20">
+				<CharacterSet><![CDATA[A-Z,0-9]]></CharacterSet>
+			</StringMutationFuzzer>
+		</Var>
+		<Var name="sdp_ID">
+			<NumberRangeFuzzer minimum="100000000" maximum="999999999"/>
+		</Var>
+		<Var name="expFuzzer">
+			<StringExpansionFuzzer increment="1000">
+				<CharacterSet><![CDATA[\\]]></CharacterSet>
+			</StringExpansionFuzzer>
+		</Var>
+	</Variables>
+	
+	<Request requestID="1">
+		<MessageModifier>
+			<ContentLength/>
+		</MessageModifier>
+		<Timeout timeInMilliseconds="3000" message="no answer"/>
+		<Content><![CDATA[INVITE sip:/'targetNr'/@/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'attackerIP'/:/'attackerPort'/
+To: <sip:/'targetNr'/@/'targetIP'/>
+From: "attacker" <sip:/'attackerNr'/@/'expFuzzer'/>;tag=InviteFuzzingAttack
+Call-ID: /'call_ID'/@/'targetIP'/
+CSeq: 1 INVITE
+Max-Forwards: 20
+Contact: <sip:/'attackerNr'/@/'attackerIP'/:/'attackerPort'/>
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, INFO, REFER, NOTIFY
+Supported: replaces
+Content-Type: application/sdp
+Content-Length: ?
+
+v=0
+o=- /'sdp_ID'/ /'sdp_ID'/ IN IP4 /'attackerIP'/
+s=Attacker
+c=IN IP4 /'attackerIP'/
+t=0 0
+m=audio 8000 RTP/AVP 0 8 96 3 13 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:96 G726-32/8000
+a=rtpmap:3 GSM/8000
+a=rtpmap:13 CN/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-16
+a=sendrecv
+a=direction:active
+]]></Content>
+		<Response category="warning">
+			<!-- Unauthorized INVITE was successful -->
+			<Regex><![CDATA[(SIP/2.0 1)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay">
+			<!-- Proxy Authentication Required -->
+			<Regex><![CDATA[(SIP/2.0 407)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+	</Request>
+	
+</TestCase>

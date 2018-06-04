@@ -1,0 +1,96 @@
+<TestCase initialRequestMessageID="1" name="Authenticated REGISTER flooding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TestCaseSchema.xsd">
+	
+	<Variables>
+		<Var name="attackerNr">
+			<ClearText><![CDATA[1111]]></ClearText>
+		</Var>
+		<Var name="attackerIP">
+			<ConfigValue paramName="TestCaseSocketIP"/>
+		</Var>
+		<Var name="attackerPort">
+			<ConfigValue paramName="TestCaseSocketPort"/>
+		</Var>
+		<Var name="targetIP">
+			<ConfigValue paramName="TargetIP"/>
+		</Var>
+		<Var name="call_ID">
+			<StringMutationFuzzer length="10"/>
+		</Var>
+		<Var name="sdp_ID">
+			<NumberRangeFuzzer minimum="100000000" maximum="999999999"/>
+		</Var>
+		<Var name="secret">
+			<ClearText>123456</ClearText>
+		</Var>
+	</Variables>
+	
+	<Request requestID="1">
+		<Timeout timeInMilliseconds="2000" message="Unauthenticated REGISTER timeout"/>
+		<Content><![CDATA[REGISTER sip:/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'attackerIP'/:/'attackerPort'/
+Max-Forwards: 20
+To: <sip:/'attackerNr'/@/'targetIP'/>
+From: <sip:/'attackerNr'/@/'attackerIP'/>;tag=RegisterFlooding
+Call-ID: /'call_ID'/@/'targetIP'/
+CSeq: 1 REGISTER
+Contact: <sip:/'attackerNr'/@/'attackerIP'/:/'attackerPort'/>
+Content-Length: 0
+
+]]></Content>
+		<Response category="warning">
+			<!-- REGISTER was accepted by the Proxy -->
+			<Regex><![CDATA[(SIP/2.0 200)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay" followingRequestID="2">
+			<!-- Proxy Authentication Required -->
+			<Regex><![CDATA[(SIP/2.0 407)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+			<ResponseVariables>
+				<ResponseVar name="nonceRegister">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(nonce=")(.*?)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+				<ResponseVar name="realmRegister">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(realm=")(.*?)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+				<ResponseVar name="opaque">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(opaque=")(.*?)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+			</ResponseVariables>
+		</Response>
+	</Request>
+	
+	<Request requestID="2">
+		<Variables>
+			<Var name="digestRegister">
+				<Digest realm="/'realmRegister'/" uri="sip:/'attackerIP'/" username="/'attackerNr'/" secret="/'secret'/" nonce="/'nonceRegister'/" method="REGISTER"/>
+			</Var>
+		</Variables>
+		<Timeout timeInMilliseconds="2000" message="Authenticated REGISTER timeout"/>
+		<Content><![CDATA[REGISTER sip:/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'attackerIP'/:/'attackerPort'/
+Max-Forwards: 20
+To: <sip:/'attackerNr'/@/'targetIP'/>
+From: <sip:/'attackerNr'/@/'attackerIP'/>;tag=RegisterFlooding
+Call-ID: /'call_ID'/@/'targetIP'/
+CSeq: 2 REGISTER
+Contact: <sip:/'attackerNr'/@/'attackerIP'/:/'attackerPort'/>
+Proxy-Authorization: Digest username="/'attackerNr'/",realm="/'realmRegister'/",nonce="/'nonceRegister'/",uri="sip:/'attackerIP'/",response="/'digestRegister'/",opaque="/'opaque'/"
+Content-Length: 0
+
+]]></Content>
+		<Response category="warning">
+			<!-- REGISTER Authentication not accepted -->
+			<Regex><![CDATA[(SIP/2.0 4)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay">
+			<!-- REGISTER accepted by the Proxy -->
+			<Regex><![CDATA[(SIP/2.0 200)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+	</Request>
+	
+</TestCase>

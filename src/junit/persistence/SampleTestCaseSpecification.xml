@@ -1,0 +1,88 @@
+<TestCase name="SampleTestCaseSpecification" cycles="10" initialRequestMessageID="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../persistence/TestCaseSchema.xsd">
+	<Variables>
+		<Var name="AsteriskIPAddress">
+			<ConfigValue paramName="PbxIP"/>
+		</Var>
+		<Var name="TargetNr">
+			<ClearText><![CDATA[121212]]></ClearText>
+		</Var>
+		<Var name="numberRangeFuzzer">
+			<NumberRangeFuzzer minimum="0" maximum="1000"/>
+		</Var>
+		<Var name="stringMutationFuzzer">
+			<StringMutationFuzzer length="10">
+				<CharacterSet>
+					<![CDATA[a-c,!,#,\-]]>
+				</CharacterSet>
+			</StringMutationFuzzer>
+		</Var>
+		<Var name="stringExpansionFuzzer1">
+			<StringExpansionFuzzer increment="5">
+				<ExpansionString><![CDATA[abcd]]></ExpansionString>
+			</StringExpansionFuzzer>
+		</Var>
+		<Var name="stringExpansionFuzzer2">
+			<StringExpansionFuzzer increment="6">
+				<CharacterSet>
+					<![CDATA[a-c,!,#,\-]]>
+				</CharacterSet>
+			</StringExpansionFuzzer>
+		</Var>		
+		<Var name="hexValueListFuzzer">
+			<HexValueListFuzzer filePath="hexValueList.txt" repeatValueList="false"/>
+		</Var>
+		<Var name="valueListFuzzer">
+			<ValueListFuzzer filePath="valueList.txt" repeatValueList="false"/>
+		</Var>
+		<Var name="digest">
+			<Digest username="alice" secret="123456" realm="asterisk" nonce="ABABAB" uri="biloxi.com" method="REGISTER" qop="AUTH-INT" noncecount="CDCDCD" cnonce="DEDEDE" body="EFEFEF"/>
+		</Var>
+	</Variables>
+	<Request requestID="1">
+		<Content><![CDATA[REGISTER sip:192.168.0.18 SIP/2.0
+Via: SIP/2.0/UDP 192.168.0.15:5060;rport;branch=z9hG4bK297DEC382B8D4F99ACE64DAF8A83F16F
+From: testclient <sip:343434@192.168.0.18>;tag=3779692192
+To: testclient <sip:343434@192.168.0.18>
+Contact: "testclient" <sip:343434@192.168.0.15:5060>
+Call-ID: 85E8F6630642436AA7FE49BEEAD3CE7F@192.168.0.18
+CSeq: 27427 REGISTER
+Expires: 1800
+Max-Forwards: 70
+User-Agent: X-Lite release 1105x
+Content-Length: 0
+
+]]></Content>
+		<Response category="okay" followingRequestID="2" waitingTimeInMilliseconds="10000">
+			<Regex><![CDATA[SIP/2.0 (401|407)(.)*]]></Regex>
+			<ResponseVariables>
+				<ResponseVar name="nonce">
+					<ResponseCatcher catchGroupIndex="2">
+						<Regex><![CDATA[(nonce=")(.*)(")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+			</ResponseVariables>
+		</Response>
+		<Response category="warning">
+			<Regex><![CDATA[SIP/2.0 200 Ok]]></Regex>
+		</Response>
+	</Request>
+	<Request requestID="2">
+		<Timeout timeInMilliseconds="1000" message="uups"/>
+		<Content><![CDATA[SIP/2.0 401 Unauthorized
+Via: SIP/2.0/UDP 192.168.0.18:5060;rport;branch=z9hG4bK297DEC382B8D4F99ACE64DAF8A83F16F;received=192.168.0.18
+From: testclient <sip:343434@192.168.0.10>;tag=3779692192
+To: testclient <sip:343434@192.168.0.10>;tag=as5eaff1ef
+Call-ID: 85E8F6630642436AA7FE49BEEAD3CE7F@192.168.0.10
+CSeq: 27427 REGISTER
+User-Agent: Asterisk PBX
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY
+Contact: <sip:343434@192.168.0.10>
+WWW-Authenticate: Digest realm="asterisk", nonce="30419c6c"
+Content-Length: 0
+
+]]></Content>
+		<Response category="warning">
+			<Regex><![CDATA[SIP/2.0 401]]></Regex>
+		</Response>
+	</Request>
+</TestCase>

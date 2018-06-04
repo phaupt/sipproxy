@@ -1,0 +1,46 @@
+<TestCase cycles="10" initialRequestMessageID="1" name="Unauthenticated REGISTER Attempt" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TestCaseSchema.xsd">
+
+	<Variables>
+		<Var name="attackerNr">
+			<ClearText><![CDATA[1111]]></ClearText>
+		</Var>
+		<Var name="attackerIP">
+			<ConfigValue paramName="TestCaseSocketIP"/>
+		</Var>
+		<Var name="attackerPort">
+			<ConfigValue paramName="TestCaseSocketPort"/>
+		</Var>
+		<Var name="targetIP">
+			<ConfigValue paramName="TargetIP"/>
+		</Var>
+		<Var name="call_ID">
+			<StringMutationFuzzer length="10">
+				<CharacterSet><![CDATA[a-z,0-9]]></CharacterSet>
+			</StringMutationFuzzer>
+		</Var>
+	</Variables>
+	
+	<Request requestID="1">
+		<Timeout timeInMilliseconds="2000" message="no answer"/>
+		<Content><![CDATA[REGISTER sip:/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'attackerIP'/:/'attackerPort'/
+Max-Forwards: 20
+To: <sip:/'attackerNr'/@/'targetIP'/>
+From: <sip:/'attackerNr'/@/'attackerIP'/>;tag=RegisterAndInviteAttempt
+Call-ID: /'call_ID'/@/'targetIP'/
+CSeq: 1 REGISTER
+Contact: <sip:/'attackerNr'/@/'attackerIP'/:/'attackerPort'/>
+Content-Length: 0
+
+]]></Content>
+		<Response category="warning" waitingTimeInMilliseconds="500">
+			<!-- REGISTER was accepted by the Proxy -->
+			<Regex><![CDATA[(SIP/2.0 200)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+		<Response category="okay" waitingTimeInMilliseconds="500">
+			<!-- Proxy Authentication Required -->
+			<Regex><![CDATA[(SIP/2.0 4)((.*)(\r\n))+(Call-ID: /'call_ID'/@/'targetIP'/)]]></Regex>
+		</Response>
+	</Request>
+	
+</TestCase>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SIPProxyConfig>
+	<ProxyMode>
+		<PBX ip="192.168.0.18" port="5060"/>
+		<Proxy ip="192.168.0.20" port="5060"/>
+		<Client ip="192.168.0.10" port="5070"/>
+		<Transformation fileRef="DefaultTransformationConfig.xml"/>
+		<DynamicTransformation fileRef="DynamicTransformationConfig.xml"/>
+	</ProxyMode>
+	<TestCaseMode>
+	
+	</TestCaseMode>
+</SIPProxyConfig>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TransformationConfig>		
+ 	<TransformationRules>
+
+		<Client2Pbx>
+			<Rule regex="(.* )(sip:)(/'ProxySocketIP'/)( SIP/)"
+		    	  replacement="$1$2/'PbxIP'/$4"
+		    	  isActive="true"/>
+			<Rule regex="(Via: )(SIP/.*/UDP )(/'ClientIP'/)(:)(/'ClientPort'/)" 
+			      replacement="$1$2/'ProxySocketIP'/$4/'ProxySocketPort'/"
+		    	  isActive="true"/>
+			<Rule regex="(From: )(.* )(.sip:)(.*)(@)(/'ProxySocketIP'/)(.)" 
+			      replacement="$1$2$3$4$5/'PbxIP'/$7"
+		    	  isActive="true"/>
+			<Rule regex="(To: )(.*)(sip:)(.*)(@)(/'ProxySocketIP'/)(.)"
+			      replacement="$1$2$3$4$5/'PbxIP'/$7"
+		    	  isActive="true"/>
+			<Rule regex="(Contact: )(.*)(sip:)(.*)(@)(/'ClientIP'/)(:)(/'ClientPort'/)(.)"
+			      replacement="$1$2$3$4$5/'ProxySocketIP'/$7/'ProxySocketPort'/$9"
+		    	  isActive="true"/>
+			<Rule regex="(Call-ID: )(.*)(@)(/'ProxySocketIP'/)"
+			      replacement="$1$2$3/'PbxIP'/"
+		    	  isActive="true"/>
+		    <Rule regex="(ACK )(sip:.*)(@)(/'ProxySocketIP'/)"
+		          replacement="$1$2$3/'PbxIP'/"
+		          isActive="true"/>
+	    </Client2Pbx>
+   	 
+		<Pbx2Client>
+			<Rule regex="(.* )(sip:)(.*)(@)(/'ProxySocketIP'/)(:)(/'ProxySocketPort'/)( SIP/)"
+			      replacement="$1$2$3$4/'ClientIP'/$6/'ClientPort'/$8"
+		    	  isActive="true"/>
+			<Rule regex="(Via: )(SIP/.*/UDP )(/'ProxySocketIP'/)(:)(/'ProxySocketPort'/)(.*)(received=)(/'ProxySocketIP'/)"
+			      replacement="$1$2/'ClientIP'/$4/'ClientPort'/$6$7/'ClientIP'/"
+		    	  isActive="true"/>
+			<Rule regex="(Via: )(SIP/.*/UDP )(/'PbxIP'/)(:)(/'PbxPort'/)"
+			      replacement="$1$2/'ProxySocketIP'/$4/'ProxySocketPort'/"
+		    	  isActive="true"/>
+			<Rule regex="(From: )(.* )(.sip:)(.*)(@)(/'PbxIP'/)(.)" 
+			      replacement="$1$2$3$4$5/'ProxySocketIP'/$7"
+		    	  isActive="true"/>
+			<Rule regex="(To: )(.*)(sip:)(.*)(@)(/'PbxIP'/)(.)" 
+			      replacement="$1$2$3$4$5/'ProxySocketIP'/$7"
+		    	  isActive="true"/>
+			<Rule regex="(To: )(sip:)(.*)(@)(/'ProxySocketIP'/)(:)(/'ProxySocketPort'/)(.)" 
+			      replacement="$1$2$3$4/'ClientIP'/$6/'ClientPort'/$8"
+		    	  isActive="true"/>
+			<Rule regex="(Call-ID: )(.*)(@)(/'PbxIP'/)"
+			      replacement="$1$2$3/'ProxySocketIP'/"
+		    	  isActive="true"/>
+			<Rule regex="(Contact: )(.sip:)(.*)(@)(/'PbxIP'/)(.)"
+			      replacement="$1$2$3$4/'ProxySocketIP'/$6"
+		    	  isActive="true"/>
+			<Rule regex="(Message-Account: )(sip:)(.*)(@)(/'PbxIP'/)"
+			      replacement="$1$2$3$4/'ProxySocketIP'/"
+		    	  isActive="true"/>
+	    </Pbx2Client>
+
+  	</TransformationRules>
+  	
+</TransformationConfig>

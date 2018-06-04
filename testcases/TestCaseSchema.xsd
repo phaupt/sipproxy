@@ -1,0 +1,197 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="TestCase">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Variables" type="Variables" minOccurs="0"/>
+				<xs:element name="Request" type="Request" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="xs:string" use="required"/>
+			<xs:attribute name="cycles" type="xs:integer" use="optional"/>
+			<xs:attribute name="initialRequestMessageID" type="xs:integer" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="Variables">
+		<xs:sequence>
+			<xs:element name="Var" type="Var" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Var">
+		<xs:sequence>
+			<xs:element ref="Module"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="Request">
+		<xs:sequence>
+			<xs:element name="MessageModifier" type="MessageModifier" minOccurs="0"/>
+			<xs:element name="Variables" type="Variables" minOccurs="0"/>
+			<xs:element name="Timeout" type="Timeout" minOccurs="0"/>
+			<xs:element name="Content" type="xs:string"/>
+			<xs:element name="Response" type="Response" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="requestID" type="xs:integer" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="MessageModifier">
+		<xs:sequence>
+			<xs:element ref="MessageModifierAbstract" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="MessageModifierAbstract" type="MessageModifierAbstractType" abstract="true"/>
+	<xs:complexType name="MessageModifierAbstractType"/>
+	<xs:element name="LinePermutator" type="LinePermutatorType" substitutionGroup="MessageModifierAbstract"/>
+	<xs:complexType name="LinePermutatorType">
+		<xs:complexContent>
+			<xs:extension base="MessageModifierAbstractType">
+				<xs:attribute name="startLine" type="xs:integer" use="required"/>
+				<xs:attribute name="endLine" type="xs:integer" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="ContentLength" type="ContentLengthType" substitutionGroup="MessageModifierAbstract"/>
+	<xs:complexType name="ContentLengthType">
+		<xs:complexContent>
+			<xs:extension base="MessageModifierAbstractType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Timeout">
+		<xs:attribute name="timeInMilliseconds" type="xs:integer" use="required"/>
+		<xs:attribute name="message" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="Response">
+		<xs:sequence>
+			<xs:element name="Regex" type="xs:string"/>
+			<xs:element name="ResponseVariables" type="ResponseVariables" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="category" type="categoryValues" use="required"/>
+		<xs:attribute name="followingRequestID" type="xs:integer" use="optional"/>
+		<xs:attribute name="waitingTimeInMilliseconds" type="xs:integer" use="optional"/>
+	</xs:complexType>
+	<xs:simpleType name="categoryValues">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="okay"/>
+			<xs:enumeration value="warning"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ResponseVariables">
+		<xs:sequence>
+			<xs:element name="ResponseVar" type="ResponseVar" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ResponseVar">
+		<xs:sequence>
+			<xs:element ref="ResponseCatcher"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:element name="ResponseCatcher" type="ResponseCatcherType"/>
+	<xs:complexType name="ResponseCatcherType">
+		<xs:sequence>
+			<xs:element name="Regex" type="xs:string"/>
+		</xs:sequence>
+		<xs:attribute name="catchGroupIndex" type="xs:integer" use="required"/>
+	</xs:complexType>
+	<xs:element name="Module" type="ModuleType" abstract="true"/>
+	<xs:complexType name="ModuleType"/>
+	<xs:element name="ClearText" type="ClearTextType" substitutionGroup="Module"/>
+	<xs:complexType name="ClearTextType" mixed="true">
+		<xs:complexContent mixed="true">
+			<xs:extension base="ModuleType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="ConfigValue" type="ConfigValueType" substitutionGroup="Module"/>
+	<xs:complexType name="ConfigValueType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:attribute name="paramName" type="configValues" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="configValues">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ProxySocketIP"/>
+			<xs:enumeration value="ProxySocketPort"/>
+			<xs:enumeration value="PbxIP"/>
+			<xs:enumeration value="PbxPort"/>
+			<xs:enumeration value="ClientIP"/>
+			<xs:enumeration value="ClientPort"/>
+			<xs:enumeration value="TestCaseSocketIP"/>
+			<xs:enumeration value="TestCaseSocketPort"/>
+			<xs:enumeration value="TargetIP"/>
+			<xs:enumeration value="TargetPort"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:element name="NumberRangeFuzzer" type="NumberRangeFuzzerType" substitutionGroup="Module"/>
+	<xs:complexType name="NumberRangeFuzzerType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:attribute name="minimum" type="xs:integer" use="required"/>
+				<xs:attribute name="maximum" type="xs:integer" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="StringMutationFuzzer" type="StringMutationFuzzerType" substitutionGroup="Module"/>
+	<xs:complexType name="StringMutationFuzzerType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:sequence>
+					<xs:element ref="CharacterSet" minOccurs="0"/>
+				</xs:sequence>
+				<xs:attribute name="length" type="xs:integer" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="StringExpansionFuzzer" type="StringExpansionFuzzerType" substitutionGroup="Module"/>
+	<xs:complexType name="StringExpansionFuzzerType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:choice>
+					<xs:element ref="CharacterSet" minOccurs="0"/>
+					<xs:element name="ExpansionString" type="xs:string" minOccurs="0"/>
+				</xs:choice>
+				<xs:attribute name="increment" type="xs:integer" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="NumberCounter" type="NumberCounterType" substitutionGroup="Module"/>
+	<xs:complexType name="NumberCounterType" mixed="true">
+		<xs:complexContent mixed="true">
+			<xs:extension base="ModuleType">
+				<xs:attribute name="startValue" type="xs:integer" use="required"/>
+				<xs:attribute name="counterIncrement" type="xs:integer" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="CharacterSet" type="xs:string"/>
+	<xs:element name="ValueListFuzzer" type="ValueListFuzzerType" substitutionGroup="Module"/>
+	<xs:complexType name="ValueListFuzzerType" mixed="true">
+		<xs:complexContent mixed="true">
+			<xs:extension base="ModuleType">
+				<xs:attribute name="repeatValueList" type="xs:boolean" use="required"/>
+				<xs:attribute name="filePath" type="xs:string" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="HexValueListFuzzer" type="HexValueListFuzzerType" substitutionGroup="ValueListFuzzer"/>
+	<xs:complexType name="HexValueListFuzzerType">
+		<xs:complexContent>
+			<xs:extension base="ValueListFuzzerType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Digest" type="DigestType" substitutionGroup="Module"/>
+	<xs:complexType name="DigestType">
+		<xs:complexContent>
+			<xs:extension base="ModuleType">
+				<xs:attribute name="username" type="xs:string" use="required"/>
+				<xs:attribute name="secret" type="xs:string" use="required"/>
+				<xs:attribute name="realm" type="xs:string" use="required"/>
+				<xs:attribute name="nonce" type="xs:string" use="required"/>
+				<xs:attribute name="uri" type="xs:string" use="required"/>
+				<xs:attribute name="method" type="xs:string" use="required"/>
+				<xs:attribute name="qop" type="xs:string" use="optional"/>
+				<xs:attribute name="noncecount" type="xs:string" use="optional"/>
+				<xs:attribute name="cnonce" type="xs:string" use="optional"/>
+				<xs:attribute name="body" type="xs:string" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+</xs:schema>

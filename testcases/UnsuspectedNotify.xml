@@ -1,0 +1,56 @@
+<TestCase cycles="1" initialRequestMessageID="1" name="Unsuspected NOTIFY" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="TestCaseSchema.xsd">
+	
+	<Variables>
+		<Var name="pbxIP">
+			<ConfigValue paramName="PbxIP"/>
+		</Var>
+		<Var name="pbxPort">
+			<ConfigValue paramName="PbxPort"/>
+		</Var>
+		<Var name="myIP">
+			<ConfigValue paramName="TestCaseSocketIP"/>
+		</Var>
+		<Var name="myPort">
+			<ConfigValue paramName="TestCaseSocketPort"/>
+		</Var>
+		<Var name="targetIP">
+			<ConfigValue paramName="TargetIP"/>
+		</Var>
+		<Var name="targetPort">
+			<ConfigValue paramName="TargetPort"/>
+		</Var>
+		<Var name="targetNr">
+			<ClearText>2222</ClearText>
+		</Var>
+		<Var name="counter1">
+			<NumberCounter startValue="100"></NumberCounter>
+		</Var>
+	</Variables>
+	
+	<Request requestID="1">
+		<MessageModifier>
+			<ContentLength/>
+		</MessageModifier>
+		<Content><![CDATA[NOTIFY sip:/'targetNr'/@/'targetIP'/ SIP/2.0
+Via: SIP/2.0/UDP /'myIP'/:/'myPort'/
+From: "attacker" <sip:attacker@/'pbxIP'/>
+To: <sip:/'targetNr'/@/'targetIP'/>
+Contact: <sip:1111@/'myIP'/:/'myPort'/>
+Call-ID: 00000000000000@/'pbxIP'/
+CSeq: /'counter1'/ NOTIFY
+Event: message-summary
+Content-Type: application/simple-message-summary
+Content-Length: 39
+
+Messages-Waiting: yes
+]]>		
+		</Content>
+		<Response category="warning">
+			<Regex><![CDATA[SIP/2.0 200 OK]]></Regex>
+		</Response>
+		<Response category="okay">
+			<Regex><![CDATA[SIP/2.0 481]]></Regex>
+		</Response>
+	</Request>
+	
+</TestCase>

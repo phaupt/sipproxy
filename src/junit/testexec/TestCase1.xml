@@ -1,0 +1,82 @@
+<TestCase name="TestCase1" cycles="1" initialRequestMessageID="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="..\..\persistence\TestCaseSchema.xsd">
+	<Variables>
+		<Var name="AsteriskIPAddress">
+			<ConfigValue paramName="PbxIP"/>
+		</Var>
+		<Var name="TargetNr">
+			<ClearText><![CDATA[121212]]></ClearText>
+		</Var>
+		<Var name="numberRangeFuzzer">
+			<NumberRangeFuzzer minimum="0" maximum="1000"/>
+		</Var>
+		<Var name="stringMutationFuzzer">
+			<StringMutationFuzzer length="10"/>
+		</Var>
+		<Var name="stringExpansionFuzzer">
+			<StringExpansionFuzzer increment="5">
+				<ExpansionString><![CDATA[abcd]]></ExpansionString>
+			</StringExpansionFuzzer>
+		</Var>
+		<Var name="hexValueListFuzzer">
+			<HexValueListFuzzer filePath="hexValues.dat"/>
+		</Var>
+		<Var name="valueListFuzzer">
+			<ValueListFuzzer>
+<![CDATA[value1
+value2
+value3]]>			
+			</ValueListFuzzer>
+		</Var>
+	</Variables>
+	<Request requestID="1">
+		<Content><![CDATA[REGISTER sip:192.168.0.18 SIP/2.0
+Via: SIP/2.0/UDP 192.168.0.15:5060;rport;branch=z9hG4bK297DEC382B8D4F99ACE64DAF8A83F16F
+From: testclient <sip:343434@192.168.0.18>;tag=3779692192
+To: testclient <sip:343434@192.168.0.18>
+Contact: "testclient" <sip:343434@192.168.0.15:5060>
+Call-ID: 85E8F6630642436AA7FE49BEEAD3CE7F@192.168.0.18
+CSeq: 27427 REGISTER
+Expires: 1800
+Max-Forwards: 70
+User-Agent: X-Lite release 1105x
+Content-Length: 0
+
+]]></Content>
+		<Response category="okay" followingRequestID="2" waitingTimeInMilliseconds="10000">
+			<Regex><![CDATA[SIP/2.0 (401|407)(.)*]]></Regex>
+			<ResponseVariables>
+				<ResponseVar name="nonce">
+					<ResponseCatcher replacement="2">
+						<Regex><![CDATA[(nonce=\")(.*)(\")]]></Regex>
+					</ResponseCatcher>
+				</ResponseVar>
+			</ResponseVariables>
+		</Response>
+		<Response category="warning">
+			<Regex><![CDATA[SIP/2.0 200 Ok]]></Regex>
+		</Response>
+	</Request>
+	<Request requestID="2">
+		<Variables>
+		<Var name="digest">
+			<Digest username="alice" secret="123456" realm="asterisk" nonce="/'nonce'/" uri="biloxi.com" method="REGISTER"/>
+		</Var>
+		</Variables>
+		<Timeout timeInMilliseconds="2000" message="uups"/>
+		<Content><![CDATA[REGISTER sip:*98@192.168.0.18 SIP/2.0
+Via: SIP/2.0/UDP 192.168.0.20:5060;rport;branch=z9hG4bK34CB63B2EA8F4726BCEB993CDA5EB4D3
+From: "tester" <sip:1111@192.168.0.18>;tag=474754342
+To: "tester" <sip:1111@192.168.0.18>
+Contact: <sip:1111@192.168.0.20:5060>
+Call-ID: /'TargetNr'/A-FF54-4108-959C-42/'fStringExp'/@192.168.0.20/'hexValue'/
+CSeq: 14960 REGISTER
+Max-Forwards: 70
+Content-Type: application/sdp
+User-Agent: X-Lite release 1105x
+Content-Length: 0
+]]></Content>
+		<Response category="warning">
+			<Regex><![CDATA[SIP/2.0 200 Ok]]></Regex>
+		</Response>
+	</Request>
+</TestCase>
